@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
+using System.Linq;
 
 public class RankView : MonoBehaviour 
 {
@@ -26,16 +28,44 @@ public class RankView : MonoBehaviour
     public void Show(string inUserName, string inUserScore)
     {
         this.gameObject.SetActive(true);
+        StartCoroutine(Co_RequestUser());
+    }
 
-        int i = 1;
-        foreach (var cell in _cells)
+    IEnumerator Co_RequestUser()
+    {
+        using (UnityWebRequest www = UnityWebRequest.Get("http://localhost/index.php"))
         {
-            cell.Bind(new ServerModel()
+            yield return www.Send();
+
+            if (www.isError)
             {
-                name = "TEST_" + i.ToString(),
-                score =  Random.Range((7 - i) * 100, (8 - i) * 100)
-            });
-            i++;
+                Debug.Log(www.error);
+            }
+            else
+            {
+                string data = www.downloadHandler.text;
+                SimpleJSON.JSONNode jn = SimpleJSON.JSONNode.Parse(data);
+                SimpleJSON.JSONArray array = jn.AsArray;
+
+                List<ServerModel> modelList = new List<ServerModel>();
+                for (int i = 0; i < array.Count; i++)
+                {
+                    modelList.Add(new ServerModel()
+                    {
+                        name = array[i]["name"],
+                        score = array[i]["score"].AsInt,
+                    });
+                }
+
+                modelList = modelList.OrderByDescending(x => x.score).ToList();
+                for (int i=0;i< modelList.Count;i++)
+                {
+                    if (_cells.Length <= i)
+                        break;
+
+                    _cells[i].Bind(modelList[i]);
+                }
+            }
         }
     }
 }
