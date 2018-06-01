@@ -24,22 +24,34 @@ public class RankView : MonoBehaviour
     }
 
     [SerializeField] private UserCell[] _cells;
+    [SerializeField] private string _serverURL;
     
     public void Show(string inUserName, string inUserScore)
     {
         this.gameObject.SetActive(true);
-        StartCoroutine(Co_RequestUser());
+        StartCoroutine(Co_RequestUser(inUserName, inUserScore));
     }
 
-    IEnumerator Co_RequestUser()
+    IEnumerator Co_RequestUser(string inUserName, string inUserScore)
     {
-        using (UnityWebRequest www = UnityWebRequest.Get("http://localhost/index.php"))
+        string url = string.Format("{0}/RegistScore.php?name={1}&score={2}", _serverURL,inUserName, inUserScore);
+        using (UnityWebRequest www = UnityWebRequest.Get(url))
         {
             yield return www.Send();
 
             if (www.isError)
             {
-                Debug.Log(www.error);
+                Debug.LogError(www.error);
+            }
+        }
+
+        using (UnityWebRequest www = UnityWebRequest.Get(_serverURL + "/index.php"))
+        {
+            yield return www.Send();
+
+            if (www.isError)
+            {
+                Debug.LogError(www.error);
             }
             else
             {
@@ -58,7 +70,7 @@ public class RankView : MonoBehaviour
                 }
 
                 modelList = modelList.OrderByDescending(x => x.score).ToList();
-                for (int i=0;i< modelList.Count;i++)
+                for (int i = 0; i < modelList.Count; i++)
                 {
                     if (_cells.Length <= i)
                         break;
