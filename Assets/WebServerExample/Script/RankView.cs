@@ -34,10 +34,14 @@ public class RankView : MonoBehaviour
 
     IEnumerator Co_RequestUser(string inUserName, string inUserScore)
     {
-        string url = string.Format("{0}/RegistScore.php?name={1}&score={2}", _serverURL,inUserName, inUserScore);
-        using (UnityWebRequest www = UnityWebRequest.Get(url))
+        List<IMultipartFormSection> formData = new List<IMultipartFormSection>();
+        formData.Add( new MultipartFormDataSection("name", inUserName) );
+        formData.Add( new MultipartFormFileSection("score", inUserScore) );
+
+        string url = string.Format("{0}/RegistScore_v2.php", _serverURL,inUserName, inUserScore);
+        using (var www = UnityWebRequest.Post(url, formData))
         {
-            yield return www.Send();
+            yield return www.SendWebRequest();
 
             if (www.isNetworkError)
             {
