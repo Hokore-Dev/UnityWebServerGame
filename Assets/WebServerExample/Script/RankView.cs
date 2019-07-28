@@ -39,17 +39,17 @@ public class RankView : MonoBehaviour
         {
             yield return www.Send();
 
-            if (www.isError)
+            if (www.isNetworkError)
             {
                 Debug.LogError(www.error);
             }
         }
 
-        using (UnityWebRequest www = UnityWebRequest.Get(_serverURL + "/index.php"))
+        using (UnityWebRequest www = UnityWebRequest.Get(string.Format("{0}/index.php", _serverURL)))
         {
             yield return www.Send();
 
-            if (www.isError)
+            if (www.isNetworkError)
             {
                 Debug.LogError(www.error);
             }
